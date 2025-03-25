@@ -95,3 +95,18 @@ class ReplyWithContentButNoText(Exception):
         self.html_content = html_content
         self.xpath_data = xpath_data
         return
+
+
+class ContentTypeMismatchError(Exception):
+    def __init__(self, master_url, conflicting_url, master_content_type, new_content_type):
+        super().__init__(
+            f"Content-Type mismatch between master URL '{master_url}' "
+            f"({master_content_type}) and '{conflicting_url}' ({new_content_type})"
+        )
+
+
+class AllEmptyContentForMultipleURLsError(Exception):
+    def __init__(self, urls):
+        super().__init__(
+            f"All fetched URLs returned empty content: {', '.join(urls)}"
+        )

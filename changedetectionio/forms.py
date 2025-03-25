@@ -483,19 +483,25 @@ class validateURL(object):
 
 
 def validate_url(test_url):
-    # If hosts that only contain alphanumerics are allowed ("localhost" for example)
-    try:
-        url_validator(test_url, simple_host=allow_simplehost)
-    except validators.ValidationError:
-        #@todo check for xss
-        message = f"'{test_url}' is not a valid URL."
-        # This should be wtforms.validators.
-        raise ValidationError(message)
+    # Split by '|', remove whitespace, ignore empty splits
+    split_urls = [u.strip() for u in test_url.split('|') if u.strip()]
 
-    from .model.Watch import is_safe_url
-    if not is_safe_url(test_url):
-        # This should be wtforms.validators.
-        raise ValidationError('Watch protocol is not permitted by SAFE_PROTOCOL_REGEX or incorrect URL format')
+    # Validate each split URL individually
+    for single_url in split_urls:
+        try:
+            # Example usage of your custom validator that optionally allows simple hosts
+            # (You might adjust the call signature depending on how `url_validator` is defined.)
+            url_validator(single_url, simple_host=allow_simplehost)
+        except validators.ValidationError:
+            # Could customize the message if needed
+            message = f"'{single_url}' is not a valid URL."
+            raise ValidationError(message)
+
+        from .model.Watch import is_safe_url
+        if not is_safe_url(single_url):
+            raise ValidationError(
+                f"'{single_url}' is not permitted by SAFE_PROTOCOL_REGEX or is incorrectly formatted."
+            )
 
 class ValidateListRegex(object):
     """

@@ -69,8 +69,11 @@ class model(watch_base):
     def link(self):
 
         url = self.get('url', '')
-        if not is_safe_url(url):
-            return 'DISABLED'
+        split_urls = [u.strip() for u in url.split('|') if u.strip()]
+        # Validate each split URL individually
+        for single_url in split_urls:
+            if not is_safe_url(single_url):
+                return 'DISABLED'
 
         ready_url = url
         if '{%' in url or '{{' in url:
@@ -87,13 +90,53 @@ class model(watch_base):
                 flash(message, 'error')
                 return ''
 
-        if ready_url.startswith('source:'):
-            ready_url=ready_url.replace('source:', '')
+        split_urls = [u.strip() for u in ready_url.split('|') if u.strip()]
 
-        # Also double check it after any Jinja2 formatting just incase
-        if not is_safe_url(ready_url):
-            return 'DISABLED'
+        # Validate each split URL individually
+        for single_url in split_urls:
+            if single_url.startswith('source:'):
+                single_url=single_url.replace('source:', '')
+
+            # Also double check it after any Jinja2 formatting just incase
+            if not is_safe_url(single_url):
+                return 'DISABLED'
+
         return ready_url
+
+    @property
+    def is_multi_url(self):
+        """
+        True if the final link property contains multiple pipe-delimited URLs.
+        (Ignoring empty entries.)
+        """
+        # If link is empty or DISABLED, it's not multi-URL
+        if not self.link or self.link == "DISABLED":
+            return False
+
+        split_urls = [u.strip() for u in self.link.split('|') if u.strip()]
+        return len(split_urls) > 1
+
+    @property
+    def first_link(self):
+        """
+        Return the first URL from the final link property, or an empty string if none.
+        """
+        if not self.link or self.link == "DISABLED":
+            return ""
+
+        split_urls = [u.strip() for u in self.link.split('|') if u.strip()]
+        return split_urls[0] if split_urls else ""
+
+    @property
+    def num_links(self):
+        """
+        Return how many URLs (pipe-delimited) are in the final link property.
+        """
+        if not self.link or self.link == "DISABLED":
+            return 0
+
+        split_urls = [u.strip() for u in self.link.split('|') if u.strip()]
+        return len(split_urls)
 
     def clear_watch(self):
         import pathlib

@@ -322,10 +322,15 @@ class ChangeDetectionStore:
                 logger.error(f"Error fetching metadata for shared watch link {url} {str(e)}")
                 flash("Error fetching metadata for {}".format(url), 'error')
                 return False
-        from .model.Watch import is_safe_url
-        if not is_safe_url(url):
-            flash('Watch protocol is not permitted by SAFE_PROTOCOL_REGEX', 'error')
-            return None
+
+        split_urls = [u.strip() for u in url.split('|') if u.strip()]
+
+        # Validate each split URL individually
+        for single_url in split_urls:
+            from .model.Watch import is_safe_url
+            if not is_safe_url(single_url):
+                flash('Watch protocol is not permitted by SAFE_PROTOCOL_REGEX', 'error')
+                return None
 
         if tag and type(tag) == str:
             # Then it's probably a string of the actual tag by name, split and add it
