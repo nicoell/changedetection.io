@@ -2,5 +2,6 @@
 
 # Only exists for direct CLI usage
 
-import changedetectionio
-changedetectionio.main()
+if __name__ == "__main__":
+    import changedetectionio
+    changedetectionio.main()
