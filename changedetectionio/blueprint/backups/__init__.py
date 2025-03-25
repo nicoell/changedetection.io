@@ -121,7 +121,7 @@ def construct_blueprint(datastore: ChangeDetectionStore):
     def download_backup(filename):
         import re
         filename = filename.strip()
-        backup_filename_regex = BACKUP_FILENAME_FORMAT.format("\d+")
+        backup_filename_regex = BACKUP_FILENAME_FORMAT.format(r"\d+")
 
         full_path = os.path.join(os.path.abspath(datastore.datastore_path), filename)
         if not full_path.startswith(os.path.abspath(datastore.datastore_path)):
