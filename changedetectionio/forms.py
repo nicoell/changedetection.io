@@ -483,11 +483,15 @@ class validateURL(object):
 
 
 def validate_url(test_url):
-    # Split by '|', remove whitespace, ignore empty splits
-    split_urls = [u.strip() for u in test_url.split('|') if u.strip()]
+    try:
+        from changedetectionio.model.Watch import render_watch_url
+        rendered_url = render_watch_url(test_url)
+    except Exception as e:
+        message = f"Invalid URL template for: '{test_url}' - {str(e)}"
+        raise ValidationError(message)
 
     # Validate each split URL individually
-    for single_url in split_urls:
+    for single_url in rendered_url:
         try:
             # Example usage of your custom validator that optionally allows simple hosts
             # (You might adjust the call signature depending on how `url_validator` is defined.)
@@ -623,7 +627,7 @@ class ValidateCSSJSONXPATHInput(object):
 class quickWatchForm(Form):
     from . import processors
 
-    url = fields.URLField('URL', validators=[validateURL()])
+    url = fields.StringField('URL', validators=[validateURL()])
     tags = StringTagUUID('Group tag', [validators.Optional()])
     watch_submit_button = SubmitField('Watch', render_kw={"class": "pure-button pure-button-primary"})
     processor = RadioField(u'Processor', choices=processors.available_processors(), default="text_json_diff")
@@ -672,7 +676,7 @@ class SingleBrowserStep(Form):
 
 class processor_text_json_diff_form(commonSettingsForm):
 
-    url = fields.URLField('URL', validators=[validateURL()])
+    url = fields.StringField('URL', validators=[validateURL()])
     tags = StringTagUUID('Group tag', [validators.Optional()], default='')
 
     time_between_check = FormField(TimeBetweenCheckForm)

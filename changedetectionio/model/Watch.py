@@ -31,6 +31,13 @@ def is_safe_url(test_url):
 
     return True
 
+def render_watch_url(url):
+    if '{%' in url or '{{' in url:
+        # Jinja2 available in URLs along with https://pypi.org/project/jinja2-time/
+        url = jinja_render(template_str=url)
+
+    split_urls = [u.strip() for u in url.split('|') if u.strip()]
+    return split_urls
 
 class model(watch_base):
     __newest_history_key = None
@@ -69,39 +76,31 @@ class model(watch_base):
     def link(self):
 
         url = self.get('url', '')
-        split_urls = [u.strip() for u in url.split('|') if u.strip()]
-        # Validate each split URL individually
-        for single_url in split_urls:
-            if not is_safe_url(single_url):
-                return 'DISABLED'
 
-        ready_url = url
-        if '{%' in url or '{{' in url:
-            # Jinja2 available in URLs along with https://pypi.org/project/jinja2-time/
-            try:
-                ready_url = jinja_render(template_str=url)
-            except Exception as e:
-                logger.critical(f"Invalid URL template for: '{url}' - {str(e)}")
-                from flask import (
-                    flash, Markup, url_for
-                )
-                message = Markup('<a href="{}#general">The URL {} is invalid and cannot be used, click to edit</a>'.format(
-                    url_for('ui.ui_edit.edit_page', uuid=self.get('uuid')), self.get('url', '')))
-                flash(message, 'error')
-                return ''
+        try:
+            rendered_url = render_watch_url(url)
+        except Exception as e:
+            logger.critical(f"Invalid URL template for: '{url}' - {str(e)}")
+            from flask import (
+                flash, Markup, url_for
+            )
+            message = Markup('<a href="{}#general">The URL {} is invalid and cannot be used, click to edit</a>'.format(
+                url_for('ui.ui_edit.edit_page', uuid=self.get('uuid')), self.get('url', '')))
+            flash(message, 'error')
+            return ''
 
-        split_urls = [u.strip() for u in ready_url.split('|') if u.strip()]
+        out_urls = []
 
-        # Validate each split URL individually
-        for single_url in split_urls:
+        # Validate each found URL individually
+        for single_url in rendered_url:
             if single_url.startswith('source:'):
                 single_url=single_url.replace('source:', '')
 
             # Also double check it after any Jinja2 formatting just incase
-            if not is_safe_url(single_url):
-                return 'DISABLED'
+            if is_safe_url(single_url):
+                out_urls.append(single_url)
 
-        return ready_url
+        return '|'.join(out_urls)
 
     @property
     def is_multi_url(self):
