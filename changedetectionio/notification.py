@@ -183,6 +183,8 @@ def create_notification_parameters(n_object, datastore):
     # in the case we send a test notification from the main settings, there is no UUID.
     uuid = n_object['uuid'] if 'uuid' in n_object else ''
 
+    watch_links = []
+
     if uuid:
         watch_title = datastore.data['watching'][uuid].get('title', '')
         tag_list = []
@@ -197,7 +199,6 @@ def create_notification_parameters(n_object, datastore):
         watch_title = 'Change Detection'
         watch_tag = ''
         watch_link = ''
-        watch_links = []
 
     # Create URLs to customise the notification with
     # active_base_url - set in store.py data property
