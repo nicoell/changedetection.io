@@ -19,6 +19,8 @@ valid_tokens = {
     'watch_tag': '',
     'watch_title': '',
     'watch_url': '',
+    'watch_link': '',
+    'watch_links': '',
     'watch_uuid': '',
 }
 
@@ -189,9 +191,13 @@ def create_notification_parameters(n_object, datastore):
             for tag_uuid, tag in tags.items():
                 tag_list.append(tag.get('title'))
         watch_tag = ', '.join(tag_list)
+        watch_link = datastore.data['watching'][uuid].link
+        watch_links: [u.strip() for u in watch_link.split('|') if u.strip()]
     else:
         watch_title = 'Change Detection'
         watch_tag = ''
+        watch_link = ''
+        watch_links = []
 
     # Create URLs to customise the notification with
     # active_base_url - set in store.py data property
@@ -215,6 +221,8 @@ def create_notification_parameters(n_object, datastore):
             'watch_title': watch_title if watch_title is not None else '',
             'watch_url': watch_url,
             'watch_uuid': uuid,
+            'watch_link': watch_link if watch_link is not None else '',
+            'watch_links': watch_links if watch_links is not None else '',
         })
 
     # n_object will contain diff, diff_added etc etc
